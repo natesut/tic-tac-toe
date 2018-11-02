@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic-Tac-Toe</title>
+<link href="https://fonts.googleapis.com/css?family=Mali|Titillium+Web" rel="stylesheet">
+<style>
+html{height: 100%;}
+body{
+	font-family: 'Titillium Web', sans-serif;
+	text-align:center;
+	text-shadow: 1px 1px 1px #000;
+}
+.hidden{display: none;}
+.modal {
+	position: fixed;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	visibility: hidden;
+	transform: scale(1.3);
+	transition: visibility 0s linear 0.5s, opacity 0.5s 0s, transform 0.5s;
+}
+.showModal {
+	opacity: 1;
+	visibility: visible;
+	transform: scale(1.0);
+	transition: visibility 0s linear 0s, opacity 0.25s 0s, transform 0.25s;
+  }
+#prompt{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background-color: white;
+	padding: 1rem 1.5rem;
+	width: 24rem;
+	border-radius: 0.5rem;
+	border: #ff7cd8 1px solid;
+	text-shadow: none;
+}
+input,button{
+	font-family: Mali, cursive;
+	margin:10px 3px 10px 1px;
+}
+label,input,button{
+	cursor:pointer;
+}
+label::after{
+	content:":";
+}
+input{
+	border:purple 1px solid;
+	width:60px;
+}
+input:focus{
+	box-shadow:purple 0 0 5px;
+}
+#whoGoesFirst span{font-weight: bold;}
+#gameBoard{margin:0 auto;border-collapse:collapse;}
+td
+{
+    width:60px;
+    height:60px;
+    border: solid 4px purple;
+    text-align:center;
+    font-size:2.3em;
+    border-top:none;
+    border-radius:90px;
+    transition: background-color .5s ease-in;		
+}
+td:hover
+{
+    background-color: #d6ace0;
+    cursor:pointer;
+    transition: background-color .4s ease-out;
+}
+td:first-child{border-left:none;}
+td:last-child{border-right:none;}
+tr:last-child td{border-bottom:none;}
+.clicked, .clicked:hover, .gameOverCell, .gameOverCell:hover{
+	cursor:auto;
+	background-color:inherit;
+	transition:none;
+	border-radius:0;
+}
+.clicked, .clicked:hover{
+	transition:border-radius .4s linear;
+	box-shadow:inset 0 0 6px #333;
+}
+.winningCell{
+	color:gold;
+	font-weight:bold;
+	text-shadow: 0 0 10px rebeccapurple;
+	transition:font-color .5s ease-in;
+}
+.win{
+	background-image: url(images/win.gif);
+	background-size:cover;
+}
+.cat{
+	background-image: url(images/cat.jpg);
+	background-size:cover;
+}
+#wb{
+	font-family: Mali, cursive;
+	font-size:1.9em;
+	font-weight:700;
+	padding:8px;
+	position: relative;
+	/* text-align: center; */
+	margin: auto;
+	top:-126px;
+	width:60%;
+	min-height: 42px;
+	z-index: 5;
+	opacity: .85;
+	border:black 1px dotted;
+	background: linear-gradient(to right, #fcecfc 0%,#fd89d7 29%,#fba6e1 50%,#ffe0f4 76%,#ff7cd8 100%);
+}
+#wb::after{
+	content: " is the winner!"
+}
+</style>
+</head>
+<body>
+	<div class="modal">
+		<div id="prompt">
+				<div id="player1Form">
+					<label for="player1Name">Player 1's name</label>
+					<input id="player1Name" name="player1Name" placeholder="name">
+					<label for="player1Color">and color</label>
+					<input id="player1Color" name="player1Color" type="color" value="#0000ff">
+				</div>
+				<div id="player2Form" class="hidden">
+						<label for="player2Name">Player 2's name</label>
+						<input id="player2Name" name="player2Name" placeholder="name">
+						<label for="player2Color">and color</label>
+						<input id="player2Color" name="player2Color" type="color" value="#d6ace0">
+				</div>
+				<div id="whoGoesFirst" class="hidden">
+					<p><span id="firstPlayer"></span> goes first and <span id="secondPlayer"></span> is second.</p>
+				</div>
+				<button id="promptBtn">Next Player</button>
+		</div>
+	</div>
+	<h1>Tic-Tac-Toe Madness</h1>
+	<p>Let the madness begin!</p>
+	<table id="gameBoard">
+		<tr>
+			<td id=c1 data-player=-10></td>
+			<td id=c2 data-player=-10></td>
+			<td id=c3 data-player=-10></td>
+		</tr>
+		<tr>
+			<td id=c4 data-player=-10></td>
+			<td id=c5 data-player=-10></td>
+			<td id=c6 data-player=-10></td>
+		</tr>
+		<tr>
+			<td id=c7 data-player=-10></td>
+			<td id=c8 data-player=-10></td>
+			<td id=c9 data-player=-10></td>
+		</tr>
+	</table>
+	<div id="wb" class="hidden">Amelia</div>
+
+</body>
+<script>
+//util functions
+const util = (()=>{
+	return{
+		modalToggle: function (){
+			this.getEl(".modal").classList.toggle("showModal");
+		},
+		hiddenToggle: function(el){
+			this.getEl(el).classList.toggle("hidden");
+		},
+		getEl : function(el){
+			return document.querySelector(el);
+		},
+		getEls : function(el){
+			return document.querySelectorAll(el);
+		}
+	}
+})();
+
+const player1={
+	name:"player1",
+	color:"",
+	points:0
+}
+const player2={
+	name:"player2",
+	color:"",
+	points:0
+}
+let whoGoesFirst = 1, currentPlayer = 1; //player1 by default 
+let whoGoesSecond = 2;
+let mark;
+let totalMoves = 0; //total moves made in a game
+let winner = "";
+let gameCounter = 0;
+const allTDs = util.getEls("td");
+const gb = util.getEl("#gameBoard");
+const wb = util.getEl("#wb");//winner banner
+const pb = util.getEl("#promptBtn");
+const waysToWin = [
+	[1, 2, 3]
+	,[4, 5, 6]
+	,[7, 8, 9]
+	,[1, 4, 7]
+	,[2, 5, 8]
+	,[3, 6, 9]
+	,[1, 5, 9]
+	,[3, 5, 7]
+];
+
+function init(){
+	for(td of allTDs){	
+		td.addEventListener("click", clickHandler);
+		pb.addEventListener("click", promptHandler);
+		util.modalToggle();
+		util.getEl("#player1Name").focus();
+	}
+}
+
+function promptHandler(){
+	
+	p1Name = util.getEl("#player1Name").value;
+	p2Name = util.getEl("#player2Name").value;
+
+	if(pb.innerHTML == "Next Player" && p1Name){
+		player1.name = (p1Name == " ") ? "Player 1" : p1Name;
+		player1.color = util.getEl("#player1Color").value;
+		p1Form = util.getEl("#player1Form")
+	
+		//using promise to know when fadeOut is done
+		//not handling an error
+		fadeOut(p1Form,30).then(function(){
+			pb.innerHTML = "See who goes first";
+			util.hiddenToggle("#player2Form");
+			util.getEl("#player2Name").focus();
+		});
+	}
+
+	if(pb.innerHTML == "See who goes first" && p2Name){
+		player2.name = (p2Name == " ") ? "Player 2" : p2Name;
+		player2.color = util.getEl("#player2Color").value;
+		p2Form = util.getEl("#player2Form")
+
+		determinePlayOrder();
+
+		fadeOut(p2Form,30).then(()=>{
+			pb.innerHTML = "Begin";
+			util.hiddenToggle("#whoGoesFirst");
+		});		
+	}
+	if(pb.innerHTML == "Begin"){
+		util.modalToggle();
+	}
+}
+
+function determinePlayOrder(){	
+	randomNum = Math.round(Math.random());
+
+	if(randomNum==1){
+		whoGoesFirst = 2; //make player 2 go first
+		currentPlayer = 2;
+		whoGoesSecond = 1;
+		util.getEl("#firstPlayer").innerHTML = player2.name;
+		util.getEl("#firstPlayer").setAttribute("style", "color:"+player2.color);
+		util.getEl("#secondPlayer").innerHTML = player1.name;
+		util.getEl("#secondPlayer").setAttribute("style", "color:"+player1.color);
+	}else{
+		util.getEl("#firstPlayer").innerHTML = player1.name;
+		util.getEl("#firstPlayer").setAttribute("style", "color:"+player1.color);
+		util.getEl("#secondPlayer").innerHTML = player2.name;
+		util.getEl("#secondPlayer").setAttribute("style", "color:"+player2.color);
+	}	
+}
+
+function clickHandler(){
+	let whichCell = this.getAttribute("id");
+	this.setAttribute("class","clicked");
+	this.setAttribute("data-player",currentPlayer);
+	setTimeout(function(){
+		document.getElementById(whichCell).setAttribute("style","box-shadow:none;");	
+	}, 900);
+	if(currentPlayer == whoGoesFirst){
+		mark = "X";
+	}else{
+		mark = "O";
+	}
+	//update current player
+	currentPlayer = (currentPlayer > 1)? 1 : 2;
+	this.innerHTML = mark;
+	this.removeEventListener("click", clickHandler);
+	totalMoves++;
+	//if 5 or more moves, check for a win
+	if (totalMoves > 4){
+		checkWin();
+	}
+}// end clickHandler
+
+function checkWin() {	
+	let sum = 0;
+	let cellRef = 0;
+	//add cells
+	for (win of waysToWin) {
+		sum = 0; //clear sum from previous check
+		for (cellNum of win) {
+			cellRef = "c" + cellNum;
+			sum += +document.getElementById(cellRef).getAttribute("data-player");
+		}
+		if (sum == 3) {
+			winner = (whoGoesFirst == 1) ? player1.name : player2.name;
+			highlightWin(win);
+			break;
+		}
+		if (sum == 6) {
+			winner = (whoGoesFirst == 1) ? player2.name : player1.name;
+			highlightWin(win);
+			break;
+		}
+	}
+
+	if (winner == "" && totalMoves == 9) {
+		winner="Cat";
+		gb.setAttribute("class","cat");
+		winnerAnnoucement();
+	}
+}//end checkWin
+
+function highlightWin(winningCells){
+	for (cellNum of winningCells) {
+		cellRef = "c" + cellNum;
+		document.getElementById(cellRef).setAttribute("class","winningCell clicked");
+	}
+	gb.setAttribute("class","win");
+	winnerAnnoucement();
+}
+
+function winnerAnnoucement(){
+	wb.innerHTML = winner;
+	if(winner == player1.name){
+		++player1.points;
+	}else if(winner == player2.name){
+		++player2.points;
+	}
+	++gameCounter;
+	wb.removeAttribute("class");
+	setTimeout(function(){fadeOut(wb,50)}, 2000);
+	
+	endGame();
+}
+
+function fadeOut(element, fadeTime){
+	return new Promise((resolve, reject)=>{
+		let currentOpacity = .8;
+		let fadeTimer = setInterval(function(){
+		if(currentOpacity<= 0.1){
+			clearInterval(fadeTimer);
+			element.setAttribute("class", "hidden");
+			resolve();
+		}
+		element.style.opacity = currentOpacity;
+		element.style.filter = 'alpha(opacity=' + currentOpacity * 100 + ")";
+		currentOpacity -= currentOpacity * 0.1;
+	}, fadeTime)
+	});
+}
+
+function endGame(){
+	console.log(`
+player 1 points: ${player1.points}
+player 2 points: ${player2.points}
+total moves:     ${totalMoves}
+game counter:    ${gameCounter}`)
+	//to do
+	//update overall scores
+	//show next game button
+	//reset board
+	//alert who goes first - add confirm btn?
+	//use prompt util and show wgf
+	for(td of allTDs){
+		if(!td.getAttribute("class")){
+			td.removeEventListener("click", clickHandler);
+			td.setAttribute("class","gameOverCell")
+		}		
+	}
+}
+
+init();
+</script>
+</html>
