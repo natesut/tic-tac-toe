@@ -12,7 +12,12 @@ body{
 	text-align:center;
 	text-shadow: 1px 1px 1px #000;
 }
+h1 {margin-bottom:0;}
+p:first-of-type {margin-top:0;}
 .hidden{display: none;}
+/*
+Modal and prompt
+*/
 .modal {
 	position: fixed;
 	left: 0;
@@ -61,6 +66,37 @@ input:focus{
 	box-shadow:purple 0 0 5px;
 }
 #whoGoesFirst span{font-weight: bold;}
+/*
+Score Board
+*/
+#scoreBoard{
+	padding:5px 0;
+}
+#player1Board,#player2Board{
+	display:inline-block;
+	padding: 4px;
+	text-align: right;
+}
+#player1Board{
+	margin-right: 62px;	
+	text-align: left;
+}
+span > span{
+	color: #333;
+	text-shadow: none;
+	font-size:90%;
+	display: block;
+	text-decoration: none !important;
+}
+.currentTurn{
+	box-shadow:0 0 5px white;
+	text-decoration: underline;
+	transition: all .5s ease-in;
+}
+
+/*
+Tic-Tac-Toe Board
+*/
 #gameBoard{margin:0 auto;border-collapse:collapse;}
 td
 {
@@ -112,7 +148,6 @@ tr:last-child td{border-bottom:none;}
 	font-weight:700;
 	padding:8px;
 	position: relative;
-	/* text-align: center; */
 	margin: auto;
 	top:-126px;
 	width:60%;
@@ -150,6 +185,10 @@ tr:last-child td{border-bottom:none;}
 	</div>
 	<h1>Tic-Tac-Toe Madness</h1>
 	<p>Let the madness begin!</p>
+	<div id="scoreBoard">
+		<span id="player1Board"></span>
+		<span id="player2Board"></span>
+	</div>
 	<table id="gameBoard">
 		<tr>
 			<td id=c1 data-player=-10></td>
@@ -168,6 +207,7 @@ tr:last-child td{border-bottom:none;}
 		</tr>
 	</table>
 	<div id="wb" class="hidden">Amelia</div>
+	<p id="gamesPlayed"></p>
 
 </body>
 <script>
@@ -190,17 +230,18 @@ const util = (()=>{
 })();
 
 const player1={
+	id:1,
 	name:"player1",
 	color:"",
 	points:0
 }
 const player2={
+	id:2,
 	name:"player2",
 	color:"",
 	points:0
 }
 let whoGoesFirst = 1, currentPlayer = 1; //player1 by default 
-let whoGoesSecond = 2;
 let mark;
 let totalMoves = 0; //total moves made in a game
 let winner = "";
@@ -254,6 +295,7 @@ function promptHandler(){
 		p2Form = util.getEl("#player2Form")
 
 		determinePlayOrder();
+		initScoreBoard();
 
 		fadeOut(p2Form,30).then(()=>{
 			pb.innerHTML = "Begin";
@@ -271,7 +313,6 @@ function determinePlayOrder(){
 	if(randomNum==1){
 		whoGoesFirst = 2; //make player 2 go first
 		currentPlayer = 2;
-		whoGoesSecond = 1;
 		util.getEl("#firstPlayer").innerHTML = player2.name;
 		util.getEl("#firstPlayer").setAttribute("style", "color:"+player2.color);
 		util.getEl("#secondPlayer").innerHTML = player1.name;
@@ -281,6 +322,42 @@ function determinePlayOrder(){
 		util.getEl("#firstPlayer").setAttribute("style", "color:"+player1.color);
 		util.getEl("#secondPlayer").innerHTML = player2.name;
 		util.getEl("#secondPlayer").setAttribute("style", "color:"+player2.color);
+	}	
+}
+
+function initScoreBoard(){
+	util.getEl("#player1Board").innerHTML = player1.name +"<span>wins so far: " + player1.points+"</span>";
+	util.getEl("#player1Board").setAttribute("style","color:"+player1.color);
+	util.getEl("#player2Board").innerHTML = player2.name +"<span>wins so far: " + player2.points+"</span>";
+	util.getEl("#player2Board").setAttribute("style","color:"+player2.color);
+	util.getEl("#gamesPlayed").innerHTML = "Games played: " + gameCounter;
+	whoseTurnNotification();
+}
+
+function whoseTurnNotification(){
+	switch(totalMoves){
+		case 0:
+		if (currentPlayer == player1.id){
+			util.getEl("#player1Board").classList.toggle("currentTurn");
+			let colorStyle = util.getEl("#player1Board").getAttribute("style");
+			console.log(temp);
+			util.getEl("#player1Board").setAttribute("style","box-shadow:0 0 5px "+player1.color);
+		}else{
+			util.getEl("#player2Board").classList.toggle("currentTurn");
+			util.getEl("#player2Board").setAttribute("style","box-shadow:0 0 5px "+player2.color);
+		}
+			break;
+		default:
+			util.getEl("#player1Board").classList.toggle("currentTurn");
+			util.getEl("#player2Board").classList.toggle("currentTurn");
+			if (currentPlayer == player1.id){
+				util.getEl("#player2Board").setAttribute("style","box-shadow:none;");
+				util.getEl("#player1Board").setAttribute("style","box-shadow:0 0 5px "+player1.color);
+			}else{
+				util.getEl("#player1Board").setAttribute("style","box-shadow:none;");
+				util.getEl("#player2Board").setAttribute("style","box-shadow:0 0 5px "+player2.color);
+			}
+			break;
 	}	
 }
 
@@ -305,6 +382,7 @@ function clickHandler(){
 	if (totalMoves > 4){
 		checkWin();
 	}
+	whoseTurnNotification();
 }// end clickHandler
 
 function checkWin() {	
@@ -318,12 +396,12 @@ function checkWin() {
 			sum += +document.getElementById(cellRef).getAttribute("data-player");
 		}
 		if (sum == 3) {
-			winner = (whoGoesFirst == 1) ? player1.name : player2.name;
+			winner = player1.name;
 			highlightWin(win);
 			break;
 		}
 		if (sum == 6) {
-			winner = (whoGoesFirst == 1) ? player2.name : player1.name;
+			winner = player2.name;
 			highlightWin(win);
 			break;
 		}
