@@ -66,6 +66,7 @@ input:focus{
 	box-shadow:purple 0 0 5px;
 }
 #whoGoesFirst span{font-weight: bold;}
+#selectWinningImage{margin-right:15px;}
 /*
 Score Board
 */
@@ -86,18 +87,17 @@ span > span{
 	text-shadow: none;
 	font-size:90%;
 	display: block;
-	text-decoration: none !important;
 }
 .currentTurn{
 	box-shadow:0 0 5px white;
-	text-decoration: underline;
 	transition: all .5s ease-in;
 }
 
 /*
 Tic-Tac-Toe Board
 */
-#gameBoard{margin:0 auto;border-collapse:collapse;}
+#gameBoard{margin:0 auto;border-collapse:collapse;
+	background-repeat: no-repeat;background-size:contain;}
 td
 {
     width:60px;
@@ -134,14 +134,7 @@ tr:last-child td{border-bottom:none;}
 	text-shadow: 0 0 10px rebeccapurple;
 	transition:font-color .5s ease-in;
 }
-.win{
-	background-image: url(images/win.gif);
-	background-size:cover;
-}
-.cat{
-	background-image: url(images/cat.jpg);
-	background-size:cover;
-}
+
 #wb{
 	font-family: Mali, cursive;
 	font-size:1.9em;
@@ -165,21 +158,32 @@ tr:last-child td{border-bottom:none;}
 <body>
 	<div class="modal">
 		<div id="prompt">
-				<div id="player1Form">
+				<div id="player1Form">					
 					<label for="player1Name">Player 1's name</label>
 					<input id="player1Name" name="player1Name" placeholder="name">
 					<label for="player1Color">and color</label>
 					<input id="player1Color" name="player1Color" type="color" value="#0000ff">
 				</div>
 				<div id="player2Form" class="hidden">
+						<label for="robot">Play the robot</label><input type="checkbox" id="robot" value="robot"><br>
 						<label for="player2Name">Player 2's name</label>
 						<input id="player2Name" name="player2Name" placeholder="name">
-						<label for="player2Color">and color</label>
-						<input id="player2Color" name="player2Color" type="color" value="#d6ace0">
+                  				<input id="player2Color" name="player2Color" type="color" value="#d6ace0">
 				</div>
 				<div id="whoGoesFirst" class="hidden">
 					<p><span id="firstPlayer"></span> goes first and <span id="secondPlayer"></span> is second.</p>
 				</div>
+				<div id="promptNextGame" class="hidden">
+					<p>Want to play Again? Or do you want to <a href="#" onClick="window.location.reload()">reset</a>?</p>
+				</div>
+				<select id="selectWinningImage">
+					<option value="images/goodJob.gif">Choose your winning image</option>
+					<option value="images/unicorn.gif">Unicorn</option>
+					<option value="images/pug.gif">Pug</option>
+					<option value="images/arsenal.gif">Arsenal</option>
+					<option value="images/showman.gif">Greatest Showman</option>
+					<option value="images/goodJob.gif">Good Job</option>
+				</select>
 				<button id="promptBtn">Next Player</button>
 		</div>
 	</div>
@@ -220,6 +224,9 @@ const util = (()=>{
 		hiddenToggle: function(el){
 			this.getEl(el).classList.toggle("hidden");
 		},
+		resetOpacity: function(el){
+			el.setAttribute("style","opacity:1");
+		},
 		getEl : function(el){
 			return document.querySelector(el);
 		},
@@ -233,12 +240,21 @@ const player1={
 	id:1,
 	name:"player1",
 	color:"",
+	image:"",
 	points:0
 }
 const player2={
 	id:2,
 	name:"player2",
 	color:"",
+	image:"",
+	points:0
+}
+const cat={
+	id:3,
+	name:"Cat",
+	color:"",
+	image:"images/cat.jpg",
 	points:0
 }
 let whoGoesFirst = 1, currentPlayer = 1; //player1 by default 
@@ -262,12 +278,13 @@ const waysToWin = [
 ];
 
 function init(){
+	util.getEl("#robot").addEventListener("click", robotChecked);
 	for(td of allTDs){	
 		td.addEventListener("click", clickHandler);
-		pb.addEventListener("click", promptHandler);
-		util.modalToggle();
-		util.getEl("#player1Name").focus();
+		pb.addEventListener("click", promptHandler);		
 	}
+	util.modalToggle();
+	util.getEl("#player1Name").focus();
 }
 
 function promptHandler(){
@@ -278,11 +295,17 @@ function promptHandler(){
 	if(pb.innerHTML == "Next Player" && p1Name){
 		player1.name = (p1Name == " ") ? "Player 1" : p1Name;
 		player1.color = util.getEl("#player1Color").value;
+		player1.image = util.getEl("#selectWinningImage").value;
 		p1Form = util.getEl("#player1Form")
 	
 		//using promise to know when fadeOut is done
 		//not handling an error
 		fadeOut(p1Form,30).then(function(){
+			//can't get fadeOut to reset opacity before exiting
+			//so place I call fadeOut
+			//I have to reset opacity
+			util.resetOpacity(p1Form);
+			util.getEl("#selectWinningImage").selectedIndex = 0;;
 			pb.innerHTML = "See who goes first";
 			util.hiddenToggle("#player2Form");
 			util.getEl("#player2Name").focus();
@@ -292,18 +315,80 @@ function promptHandler(){
 	if(pb.innerHTML == "See who goes first" && p2Name){
 		player2.name = (p2Name == " ") ? "Player 2" : p2Name;
 		player2.color = util.getEl("#player2Color").value;
+		player2.image = util.getEl("#selectWinningImage").value;
 		p2Form = util.getEl("#player2Form")
 
 		determinePlayOrder();
 		initScoreBoard();
 
 		fadeOut(p2Form,30).then(()=>{
+			util.resetOpacity(p2Form);
 			pb.innerHTML = "Begin";
+			util.hiddenToggle("#selectWinningImage");
 			util.hiddenToggle("#whoGoesFirst");
 		});		
 	}
 	if(pb.innerHTML == "Begin"){
 		util.modalToggle();
+		//a jank fix to set a timeout to set some things
+		//after modal disappear animation 
+		setTimeout(function(){
+			util.hiddenToggle("#whoGoesFirst");
+			util.hiddenToggle("#promptNextGame");
+			//this calls the if below
+			//so that's why there is another jank fix there
+			pb.innerHTML = "Play Again!";
+		}, 500);
+		
+	}
+	//a jank fix
+	//using totalMoves to make sure to call below
+	if(pb.innerHTML == "Play Again!" && totalMoves>0){
+		
+		playAgain();
+		fadeOut(util.getEl("#promptNextGame"),30).then(()=>{
+			util.resetOpacity(util.getEl("#promptNextGame"));			
+			pb.innerHTML = "Begin";
+			util.hiddenToggle("#whoGoesFirst");
+		});		
+	}
+}//end clickHandler
+
+function robotChecked(){
+	if(util.getEl("#robot").checked){
+		util.getEl("#player2Name").value = "robot";
+		util.getEl("#player2Name").disabled = true;
+		util.getEl("#player2Color").value = "#333333";
+		util.getEl("#player2Color").disabled = true;
+		let newOpt = document.createElement("option");
+		newOpt.text = "robot";
+		newOpt.value = "images/robot.gif";
+		util.getEl("#selectWinningImage").options.add(newOpt,0);
+		util.getEl("#selectWinningImage").value = "images/robot.gif";
+		util.getEl("#selectWinningImage").disabled = true;
+	}else{
+		util.getEl("#player2Name").value = "";
+		util.getEl("#player2Name").disabled = false;
+		util.getEl("#player2Color").disabled = false;
+		util.getEl("#selectWinningImage").options.remove(0);
+		util.getEl("#selectWinningImage").disabled = false;
+	}
+}
+
+function playAgain(){
+	winner="";
+	totalMoves=0;
+	currentPlayer=1;
+	whoGoesFirst=1;
+	gb.removeAttribute("style");
+	determinePlayOrder();
+	initScoreBoard();
+	for(td of allTDs){
+		td.innerHTML="";
+		td.removeAttribute("class");
+		td.removeAttribute("style");
+		td.setAttribute("data-player","-10");
+		td.addEventListener("click", clickHandler);	
 	}
 }
 
@@ -335,31 +420,36 @@ function initScoreBoard(){
 }
 
 function whoseTurnNotification(){
+	if (winner){return false;}
 	switch(totalMoves){
 		case 0:
 		if (currentPlayer == player1.id){
 			util.getEl("#player1Board").classList.toggle("currentTurn");
-			let colorStyle = util.getEl("#player1Board").getAttribute("style");
-			console.log(temp);
-			util.getEl("#player1Board").setAttribute("style","box-shadow:0 0 5px "+player1.color);
+			util.getEl("#player1Board").setAttribute("style","box-shadow:0 0 5px "+player1.color
+																								+";color:"+player1.color);
 		}else{
 			util.getEl("#player2Board").classList.toggle("currentTurn");
-			util.getEl("#player2Board").setAttribute("style","box-shadow:0 0 5px "+player2.color);
+			util.getEl("#player2Board").setAttribute("style","box-shadow:0 0 5px "+player2.color
+																								+";color:"+player2.color);
 		}
 			break;
 		default:
 			util.getEl("#player1Board").classList.toggle("currentTurn");
 			util.getEl("#player2Board").classList.toggle("currentTurn");
 			if (currentPlayer == player1.id){
-				util.getEl("#player2Board").setAttribute("style","box-shadow:none;");
-				util.getEl("#player1Board").setAttribute("style","box-shadow:0 0 5px "+player1.color);
+				util.getEl("#player2Board").setAttribute("style","box-shadow:none;"
+																									+";color:"+player2.color);
+				util.getEl("#player1Board").setAttribute("style","box-shadow:0 0 5px "+player1.color
+																									+";color:"+player1.color);
 			}else{
-				util.getEl("#player1Board").setAttribute("style","box-shadow:none;");
-				util.getEl("#player2Board").setAttribute("style","box-shadow:0 0 5px "+player2.color);
+				util.getEl("#player1Board").setAttribute("style","box-shadow:none;"
+																									+";color:"+player1.color);
+				util.getEl("#player2Board").setAttribute("style","box-shadow:0 0 5px "+player2.color
+																									+";color:"+player2.color);
 			}
 			break;
 	}	
-}
+}//whoseTurnNotification
 
 function clickHandler(){
 	let whichCell = this.getAttribute("id");
@@ -378,11 +468,11 @@ function clickHandler(){
 	this.innerHTML = mark;
 	this.removeEventListener("click", clickHandler);
 	totalMoves++;
+	whoseTurnNotification();
 	//if 5 or more moves, check for a win
 	if (totalMoves > 4){
 		checkWin();
 	}
-	whoseTurnNotification();
 }// end clickHandler
 
 function checkWin() {	
@@ -396,83 +486,87 @@ function checkWin() {
 			sum += +document.getElementById(cellRef).getAttribute("data-player");
 		}
 		if (sum == 3) {
-			winner = player1.name;
+			winner = player1;
 			highlightWin(win);
 			break;
 		}
 		if (sum == 6) {
-			winner = player2.name;
+			winner = player2;
 			highlightWin(win);
 			break;
 		}
 	}
 
 	if (winner == "" && totalMoves == 9) {
-		winner="Cat";
-		gb.setAttribute("class","cat");
-		winnerAnnoucement();
+		winner=cat;
+		highlightWin(win);
 	}
 }//end checkWin
 
 function highlightWin(winningCells){
-	for (cellNum of winningCells) {
-		cellRef = "c" + cellNum;
-		document.getElementById(cellRef).setAttribute("class","winningCell clicked");
+	if(!winner==cat){
+		for (cellNum of winningCells) {
+			cellRef = "c" + cellNum;
+			document.getElementById(cellRef).setAttribute("class","winningCell clicked");
+		}
 	}
-	gb.setAttribute("class","win");
+	gb.setAttribute("style","background-image: url(" + winner.image +")");
 	winnerAnnoucement();
 }
 
 function winnerAnnoucement(){
-	wb.innerHTML = winner;
-	if(winner == player1.name){
-		++player1.points;
-	}else if(winner == player2.name){
-		++player2.points;
-	}
+	wb.innerHTML = winner.name;
+	++winner.points;		
 	++gameCounter;
-	wb.removeAttribute("class");
-	setTimeout(function(){fadeOut(wb,50)}, 2000);
-	
+	wb.classList.toggle("hidden");
+	setTimeout(function(){fadeOut(wb,50);}, 2000);
+	util.resetOpacity(wb);
 	endGame();
 }
 
 function fadeOut(element, fadeTime){
-	return new Promise((resolve, reject)=>{
-		let currentOpacity = .8;
+	let currentOpacity = 1;
+	return new Promise((resolve, reject)=>{				
 		let fadeTimer = setInterval(function(){
 		if(currentOpacity<= 0.1){
 			clearInterval(fadeTimer);
-			element.setAttribute("class", "hidden");
+			element.classList.toggle("hidden");
 			resolve();
 		}
-		element.style.opacity = currentOpacity;
-		element.style.filter = 'alpha(opacity=' + currentOpacity * 100 + ")";
+		element.setAttribute("style","opacity:"+currentOpacity);
 		currentOpacity -= currentOpacity * 0.1;
 	}, fadeTime)
 	});
 }
 
 function endGame(){
-	console.log(`
-player 1 points: ${player1.points}
-player 2 points: ${player2.points}
-total moves:     ${totalMoves}
-game counter:    ${gameCounter}`)
-	//to do
-	//update overall scores
-	//show next game button
-	//reset board
-	//alert who goes first - add confirm btn?
-	//use prompt util and show wgf
 	for(td of allTDs){
 		if(!td.getAttribute("class")){
 			td.removeEventListener("click", clickHandler);
 			td.setAttribute("class","gameOverCell")
 		}		
 	}
+	util.getEl("#player1Board").innerHTML = player1.name +"<span>wins so far: " + player1.points+"</span>";
+	util.getEl("#player1Board").setAttribute("style","color:"+player1.color);
+	util.getEl("#player2Board").innerHTML = player2.name +"<span>wins so far: " + player2.points+"</span>";
+	util.getEl("#player2Board").setAttribute("style","color:"+player2.color);
+	util.getEl("#gamesPlayed").innerHTML = "Games played: " + gameCounter;
+	setTimeout(()=>{util.modalToggle();},3500);
 }
 
 init();
+
+//computer AI
+function computersSelection(){
+	if (util.getEl("#c5").getAttribute("data-player") == -10){
+		clickHandler().call(util.getEl("#c5"));
+	}else{
+		for(td of allTDs){	
+			if(td.getAttribute("data-player") == -10){
+				clickHandler().call(td);
+			}
+		}
+	}
+}
 </script>
 </html>
