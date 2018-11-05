@@ -65,6 +65,9 @@ input{
 input:focus{
 	box-shadow:purple 0 0 5px;
 }
+option{
+	font-weight: bold;
+}
 #whoGoesFirst span{font-weight: bold;}
 #selectWinningImage{margin-right:15px;}
 /*
@@ -162,13 +165,59 @@ tr:last-child td{border-bottom:none;}
 					<label for="player1Name">Player 1's name</label>
 					<input id="player1Name" name="player1Name" placeholder="name">
 					<label for="player1Color">and color</label>
-					<input id="player1Color" name="player1Color" type="color" value="#0000ff">
+					<select id="player1Color" name="player1Color" >
+						<option style="color:aqua" value="aqua">aqua</option>
+						<option style="color:aquamarine" value="aquamarine">aqua marine</option>
+						<option style="color:black" value="black">black</option>
+						<option style="color:blue" value="blue">blue</option>
+						<option style="color:coral" value="coral">coral</option>
+						<option style="color:crimson" value="crimson">crimson</option>
+						<option style="color:cyan" value="cyan">cyan</option>
+						<option style="color:darkcyan" value="darkcyan">dark cyan</option>
+						<option style="color:darkgoldenrod" value="darkgoldenrod">dark goldenrod</option>
+						<option style="color:darkmagenta" value="darkmagenta">dark magenta</option>
+						<option style="color:darkgreen" value="darkgreen">dark green</option>
+						<option style="color:darkorange" value="darkorange">dark orange</option>
+						<option style="color:darkblue" value="darkblue">dark blue</option>
+						<option style="color:darkviolet" value="darkviolet">dark violet</option>
+						<option style="color:firebrick" value="firebrick">fire brick</option>
+						<option style="color:fuchsia" value="fuchsia">fuchsia</option>
+						<option style="color:hotpink" value="hotpink">hot pink</option>
+						<option style="color:lightskyblue" value="lightskyblue">light skyblue</option>
+						<option style="color:limegreen" value="limegreen">lime green</option>
+						<option style="color:navy" value="navy">navy</option>
+						<option style="color:mediumturquoise" value="mediumturquoise">medium turquoise</option>
+						<option style="color:tomato" value="tomato">tomato</option>
+					</select>
 				</div>
 				<div id="player2Form" class="hidden">
 						<label for="robot">Play the robot</label><input type="checkbox" id="robot" value="robot"><br>
 						<label for="player2Name">Player 2's name</label>
 						<input id="player2Name" name="player2Name" placeholder="name">
-                  				<input id="player2Color" name="player2Color" type="color" value="#d6ace0">
+						<select id="player2Color" name="player2Color" >
+							<option style="color:aqua" value="aqua">aqua</option>
+							<option style="color:aquamarine" value="aquamarine">aqua marine</option>
+							<option style="color:black" value="black">black</option>
+							<option style="color:blue" value="blue">blue</option>
+							<option style="color:coral" value="coral">coral</option>
+							<option style="color:crimson" value="crimson">crimson</option>
+							<option style="color:cyan" value="cyan">cyan</option>
+							<option style="color:darkcyan" value="darkcyan">dark cyan</option>
+							<option style="color:darkgoldenrod" value="darkgoldenrod">dark goldenrod</option>
+							<option style="color:darkmagenta" value="darkmagenta">dark magenta</option>
+							<option style="color:darkgreen" value="darkgreen">dark green</option>
+							<option style="color:darkorange" value="darkorange">dark orange</option>
+							<option style="color:darkblue" value="darkblue">dark blue</option>
+							<option style="color:darkviolet" value="darkviolet">dark violet</option>
+							<option style="color:firebrick" value="firebrick">fire brick</option>
+							<option style="color:fuchsia" value="fuchsia">fuchsia</option>
+							<option style="color:hotpink" value="hotpink">hot pink</option>
+							<option style="color:lightskyblue" value="lightskyblue">light skyblue</option>
+							<option style="color:limegreen" value="limegreen">lime green</option>
+							<option style="color:navy" value="navy">navy</option>
+							<option style="color:mediumturquoise" value="mediumturquoise">medium turquoise</option>
+							<option style="color:tomato" value="tomato">tomato</option>
+						</select>
 				</div>
 				<div id="whoGoesFirst" class="hidden">
 					<p><span id="firstPlayer"></span> goes first and <span id="secondPlayer"></span> is second.</p>
