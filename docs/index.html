@@ -407,7 +407,11 @@ function robotChecked(){
 	if(util.getEl("#robot").checked){
 		util.getEl("#player2Name").value = "robot";
 		util.getEl("#player2Name").disabled = true;
-		util.getEl("#player2Color").value = "#333333";
+		let newColor = document.createElement("option");
+		newColor.text = "robot color";
+		newColor.value = "dimgray";
+		util.getEl("#player2Color").options.add(newColor,0);
+		util.getEl("#player2Color").value = "dimgray";
 		util.getEl("#player2Color").disabled = true;
 		let newOpt = document.createElement("option");
 		newOpt.text = "robot";
@@ -418,6 +422,7 @@ function robotChecked(){
 	}else{
 		util.getEl("#player2Name").value = "";
 		util.getEl("#player2Name").disabled = false;
+		util.getEl("#player2Color").options.remove(0);
 		util.getEl("#player2Color").disabled = false;
 		util.getEl("#selectWinningImage").options.remove(0);
 		util.getEl("#selectWinningImage").disabled = false;
