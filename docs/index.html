@@ -267,19 +267,19 @@ tr:last-child td{border-bottom:none;}
 //util functions
 const util = (()=>{
 	return{
-		modalToggle: function (){
+		modalToggle: ()=>{
 			this.getEl(".modal").classList.toggle("showModal");
 		},
-		hiddenToggle: function(el){
+		hiddenToggle: (el)=>{
 			this.getEl(el).classList.toggle("hidden");
 		},
-		resetOpacity: function(el){
+		resetOpacity: (el)=>{
 			el.setAttribute("style","opacity:1");
 		},
-		getEl : function(el){
+		getEl : (el)=>{
 			return document.querySelector(el);
 		},
-		getEls : function(el){
+		getEls : (el)=>{
 			return document.querySelectorAll(el);
 		}
 	}
