@@ -267,19 +267,19 @@ tr:last-child td{border-bottom:none;}
 //util functions
 const util = (()=>{
 	return{
-		modalToggle: ()=>{
+		modalToggle: function(){
 			this.getEl(".modal").classList.toggle("showModal");
 		},
-		hiddenToggle: (el)=>{
+		hiddenToggle: function(el){
 			this.getEl(el).classList.toggle("hidden");
 		},
-		resetOpacity: (el)=>{
+		resetOpacity: function(el){
 			el.setAttribute("style","opacity:1");
 		},
-		getEl : (el)=>{
+		getEl : function(el){
 			return document.querySelector(el);
 		},
-		getEls : (el)=>{
+		getEls : function(el){
 			return document.querySelectorAll(el);
 		}
 	}
@@ -307,6 +307,7 @@ const cat={
 	points:0
 }
 let whoGoesFirst = 1, currentPlayer = 1; //player1 by default 
+let robotPlaying = 0 //0 is false
 let mark;
 let totalMoves = 0; //total moves made in a game
 let winner = "";
@@ -367,6 +368,11 @@ function promptHandler(){
 		player2.image = util.getEl("#selectWinningImage").value;
 		p2Form = util.getEl("#player2Form")
 
+		//check for robot image to know if robot is playing
+		if(player2.image == "images/robot.gif"){
+			robotPlaying = 1;
+		}
+
 		determinePlayOrder();
 		initScoreBoard();
 
@@ -403,39 +409,12 @@ function promptHandler(){
 	}
 }//end clickHandler
 
-function robotChecked(){
-	if(util.getEl("#robot").checked){
-		util.getEl("#player2Name").value = "robot";
-		util.getEl("#player2Name").disabled = true;
-		let newColor = document.createElement("option");
-		newColor.text = "robot color";
-		newColor.value = "dimgray";
-		util.getEl("#player2Color").options.add(newColor,0);
-		util.getEl("#player2Color").value = "dimgray";
-		util.getEl("#player2Color").disabled = true;
-		let newOpt = document.createElement("option");
-		newOpt.text = "robot";
-		newOpt.value = "images/robot.gif";
-		util.getEl("#selectWinningImage").options.add(newOpt,0);
-		util.getEl("#selectWinningImage").value = "images/robot.gif";
-		util.getEl("#selectWinningImage").disabled = true;
-	}else{
-		util.getEl("#player2Name").value = "";
-		util.getEl("#player2Name").disabled = false;
-		util.getEl("#player2Color").options.remove(0);
-		util.getEl("#player2Color").disabled = false;
-		util.getEl("#selectWinningImage").options.remove(0);
-		util.getEl("#selectWinningImage").disabled = false;
-	}
-}
-
 function playAgain(){
 	winner="";
 	totalMoves=0;
 	currentPlayer=1;
 	whoGoesFirst=1;
-	gb.removeAttribute("style");
-	determinePlayOrder();
+	gb.removeAttribute("style");	
 	initScoreBoard();
 	for(td of allTDs){
 		td.innerHTML="";
@@ -444,6 +423,7 @@ function playAgain(){
 		td.setAttribute("data-player","-10");
 		td.addEventListener("click", clickHandler);	
 	}
+	determinePlayOrder();
 }
 
 function determinePlayOrder(){	
@@ -462,6 +442,8 @@ function determinePlayOrder(){
 		util.getEl("#secondPlayer").innerHTML = player2.name;
 		util.getEl("#secondPlayer").setAttribute("style", "color:"+player2.color);
 	}	
+	//if robot is first, handle robot move
+	checkForRobotTurn();
 }
 
 function initScoreBoard(){
@@ -505,10 +487,12 @@ function whoseTurnNotification(){
 	}	
 }//whoseTurnNotification
 
-function clickHandler(){
-	let whichCell = this.getAttribute("id");
-	this.setAttribute("class","clicked");
-	this.setAttribute("data-player",currentPlayer);
+
+function clickHandler(e){
+	let whichCell = this;
+	whichCell.setAttribute("class","clicked");
+	whichCell.setAttribute("data-player",currentPlayer);	
+	
 	setTimeout(function(){
 		document.getElementById(whichCell).setAttribute("style","box-shadow:none;");	
 	}, 900);
@@ -527,6 +511,7 @@ function clickHandler(){
 	if (totalMoves > 4){
 		checkWin();
 	}
+	checkForRobotTurn();
 }// end clickHandler
 
 function checkWin() {	
@@ -610,17 +595,78 @@ function endGame(){
 
 init();
 
-//computer AI
-function computersSelection(){
-	if (util.getEl("#c5").getAttribute("data-player") == -10){
-		clickHandler().call(util.getEl("#c5"));
+/*
+*** Robot Stuff
+*/
+
+function robotChecked(){
+	if(util.getEl("#robot").checked){
+		util.getEl("#player2Name").value = "robot";
+		util.getEl("#player2Name").disabled = true;
+		let newColor = document.createElement("option");
+		newColor.text = "robot color";
+		newColor.value = "dimgray";
+		util.getEl("#player2Color").options.add(newColor,0);
+		util.getEl("#player2Color").value = "dimgray";
+		util.getEl("#player2Color").disabled = true;
+		let newOpt = document.createElement("option");
+		newOpt.text = "robot";
+		newOpt.value = "images/robot.gif";
+		util.getEl("#selectWinningImage").options.add(newOpt,0);
+		util.getEl("#selectWinningImage").value = "images/robot.gif";
+		util.getEl("#selectWinningImage").disabled = true;
 	}else{
-		for(td of allTDs){	
-			if(td.getAttribute("data-player") == -10){
-				clickHandler().call(td);
-			}
-		}
+		util.getEl("#player2Name").value = "";
+		util.getEl("#player2Name").disabled = false;
+		util.getEl("#player2Color").options.remove(0);
+		util.getEl("#player2Color").disabled = false;
+		util.getEl("#selectWinningImage").options.remove(0);
+		util.getEl("#selectWinningImage").disabled = false;
 	}
+}
+
+function checkForRobotTurn(){
+	if(robotPlaying==1 && currentPlayer == player2.id){
+		robotsMove();
+	}
+}
+
+// robot AI
+// event for robot moves
+let robotEvent = new Event("click");
+
+
+function robotsMove(){
+	let cell5 = util.getEl("#c5")
+	if (cell5.getAttribute("data-player") == -10){
+		//cell5.dispatchEvent(robotEvent);
+		sendMove(cell5);
+	}else{
+		getRandomCell();
+		/* for(td of allTDs){	
+			if(td.getAttribute("data-player") == -10){
+				//td.dispatchEvent(robotEvent);
+				sendMove(td);
+				break;
+			}
+		} */
+	}
+}
+
+	function getRandomCell() {
+		let availableCells = [];
+		for (td of allTDs) {
+			if (td.getAttribute("data-player") == -10) {
+				availableCells.push(td);
+			}			
+		}
+		sendMove(availableCells[Math.floor(Math.random() * availableCells.length)]);
+	}
+
+function sendMove(cell){
+	setTimeout(()=>{
+		cell.dispatchEvent(robotEvent);
+	},1000)
 }
 </script>
 </html>
