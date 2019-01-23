@@ -639,17 +639,9 @@ let robotEvent = new Event("click");
 function robotsMove(){
 	let cell5 = util.getEl("#c5")
 	if (cell5.getAttribute("data-player") == -10){
-		//cell5.dispatchEvent(robotEvent);
 		sendMove(cell5);
 	}else{
 		getRandomCell();
-		/* for(td of allTDs){	
-			if(td.getAttribute("data-player") == -10){
-				//td.dispatchEvent(robotEvent);
-				sendMove(td);
-				break;
-			}
-		} */
 	}
 }
 
